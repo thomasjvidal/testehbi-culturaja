@@ -15,7 +15,13 @@ export function HeroSection({ onStartRegistration }: HeroSectionProps) {
       {/* Hero Banner */}
       <div className="text-center space-y-6">
         <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-2xl">
-          <Image src="/placeholder.svg?height=320&width=800" alt="Feira Cultural" fill className="object-cover" />
+          <Image 
+            src="/banner-image.png.png" 
+            alt="Banner CulturaJá - Feiras Culturais" 
+            fill 
+            className="object-cover" 
+            priority
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-8 left-8 text-white">
             <h1 className="text-4xl md:text-6xl font-bold mb-2">CulturaJá</h1>

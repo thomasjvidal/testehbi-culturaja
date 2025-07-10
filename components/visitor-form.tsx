@@ -64,7 +64,7 @@ export function VisitorForm({ onSubmit }: VisitorFormProps) {
 
   /**
    * Handler otimizado para submissão do formulário
-   * Inclui feedback visual e validação final
+   * Inclui feedback visual, validação final e rolagem automática
    */
   const onFormSubmit = useCallback((data: VisitorFormData) => {
     onSubmit(data)
@@ -72,6 +72,17 @@ export function VisitorForm({ onSubmit }: VisitorFormProps) {
       title: "Cadastro realizado com sucesso!",
       description: "Seus dados foram registrados.",
     })
+    
+    // Rolagem automática para a seção de resultados após 500ms
+    setTimeout(() => {
+      const resultSection = document.getElementById('visitor-data-section')
+      if (resultSection) {
+        resultSection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        })
+      }
+    }, 500)
   }, [onSubmit, toast])
 
   /**

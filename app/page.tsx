@@ -40,7 +40,11 @@ export default function Home() {
 
             <VisitorForm onSubmit={handleFormSubmit} />
 
-            {visitorData && <VisitorData data={visitorData} />}
+            {visitorData && (
+              <div id="visitor-data-section">
+                <VisitorData data={visitorData} />
+              </div>
+            )}
           </div>
         )}
       </main>
