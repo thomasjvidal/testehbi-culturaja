@@ -1,6 +1,7 @@
 "use client"
 
 import { useForm } from "react-hook-form"
+import { useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,6 +16,10 @@ interface VisitorFormProps {
   onSubmit: (data: VisitorFormData) => void
 }
 
+/**
+ * Componente de formulário de cadastro de visitante
+ * Inclui validações, integração com ViaCEP e tratamento de acessibilidade
+ */
 export function VisitorForm({ onSubmit }: VisitorFormProps) {
   const { toast } = useToast()
   const { lookupCep, isLoading } = useCepLookup()
@@ -29,7 +34,11 @@ export function VisitorForm({ onSubmit }: VisitorFormProps) {
 
   const cepValue = watch("cep")
 
-  const handleCepBlur = async () => {
+  /**
+   * Handler otimizado para busca de CEP com useCallback
+   * Previne re-renders desnecessários e melhora performance
+   */
+  const handleCepBlur = useCallback(async () => {
     if (cepValue && cepValue.length === 8) {
       try {
         const addressData = await lookupCep(cepValue)
@@ -37,23 +46,38 @@ export function VisitorForm({ onSubmit }: VisitorFormProps) {
         setValue("bairro", addressData.bairro)
         setValue("cidade", addressData.localidade)
         setValue("uf", addressData.uf)
+        
+        // Feedback positivo para o usuário
+        toast({
+          title: "Endereço encontrado!",
+          description: "Os campos foram preenchidos automaticamente.",
+        })
       } catch (error) {
         toast({
           title: "CEP não encontrado",
-          description: "Verifique o CEP digitado e tente novamente.",
+          description: error instanceof Error ? error.message : "Verifique o CEP digitado e tente novamente.",
           variant: "destructive",
         })
       }
     }
-  }
+  }, [cepValue, lookupCep, setValue, toast])
 
-  const onFormSubmit = (data: VisitorFormData) => {
+  /**
+   * Handler otimizado para submissão do formulário
+   * Inclui feedback visual e validação final
+   */
+  const onFormSubmit = useCallback((data: VisitorFormData) => {
     onSubmit(data)
     toast({
       title: "Cadastro realizado com sucesso!",
       description: "Seus dados foram registrados.",
     })
-  }
+  }, [onSubmit, toast])
+
+  /**
+   * Memoização dos campos de erro para evitar re-renders
+   */
+  const hasErrors = useMemo(() => Object.keys(errors).length > 0, [errors])
 
   return (
     <Card className="shadow-lg">
@@ -74,10 +98,16 @@ export function VisitorForm({ onSubmit }: VisitorFormProps) {
                 <Label htmlFor="nome">Nome Completo *</Label>
                 <Input
                   id="nome"
+                  aria-describedby={errors.nome ? "nome-error" : undefined}
+                  aria-invalid={!!errors.nome}
                   {...register("nome", { required: "Nome é obrigatório" })}
                   className={errors.nome ? "border-red-500" : ""}
                 />
-                {errors.nome && <p className="text-sm text-red-500">{errors.nome.message}</p>}
+                {errors.nome && (
+                  <p id="nome-error" className="text-sm text-red-500" role="alert">
+                    {errors.nome.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -85,6 +115,8 @@ export function VisitorForm({ onSubmit }: VisitorFormProps) {
                 <Input
                   id="email"
                   type="email"
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                  aria-invalid={!!errors.email}
                   {...register("email", {
                     required: "E-mail é obrigatório",
                     pattern: {
@@ -94,7 +126,11 @@ export function VisitorForm({ onSubmit }: VisitorFormProps) {
                   })}
                   className={errors.email ? "border-red-500" : ""}
                 />
-                {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+                {errors.email && (
+                  <p id="email-error" className="text-sm text-red-500" role="alert">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -204,18 +240,25 @@ export function VisitorForm({ onSubmit }: VisitorFormProps) {
 
           <Button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white font-semibold py-3"
+            disabled={isSubmitting || hasErrors}
+            aria-describedby={hasErrors ? "form-errors" : undefined}
+            className="w-full bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Enviando...
+                <Loader2 className="w-4 h-4 animate-spin mr-2" aria-hidden="true" />
+                <span>Enviando...</span>
               </>
             ) : (
               "Enviar Cadastro"
             )}
           </Button>
+          
+          {hasErrors && (
+            <div id="form-errors" className="text-sm text-red-600" role="alert">
+              Por favor, corrija os erros acima antes de enviar o formulário.
+            </div>
+          )}
         </form>
       </CardContent>
     </Card>
