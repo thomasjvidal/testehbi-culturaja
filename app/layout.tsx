@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { Footer } from '@/components/footer'
+import dynamic from 'next/dynamic'
+
+const Footer = dynamic(() => import('@/components/footer').then(mod => ({ default: mod.Footer })), {
+  ssr: false
+})
 
 export const metadata: Metadata = {
   title: 'CulturaJá - Localizador de Feiras Culturais',
